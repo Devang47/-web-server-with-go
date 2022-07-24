@@ -27,8 +27,7 @@ jobs:
       - name: Run vet & lint
         run: |
           go vet .
-          go run .
 
       - name: Run tests
         run: |
-          go test
+          go run . --test

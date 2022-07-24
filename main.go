@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +30,13 @@ func main() {
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
 	FileServer(r, "/", filesDir)
 
-	http.ListenAndServe(":8080", r)
+	s := http.Server{Addr: ":8080", Handler: r}
+
+	// For testing purposes
+	go test(&s)
+
+	s.ListenAndServe()
+
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {
@@ -47,4 +56,34 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
 		fs.ServeHTTP(w, r)
 	})
+}
+
+func test(s *http.Server) {
+	for _, arg := range os.Args[1:] {
+		if arg == "--test" {
+
+			resp, err := http.Get("http://localhost:8080/temp.txt")
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			sb := string(body)
+
+			if sb != "notessss" {
+				fmt.Println("FAIL!!")
+			} else {
+				fmt.Println("PASS!!")
+			}
+
+			fmt.Println("Stopping http server!")
+			if err := s.Shutdown(context.Background()); err != nil {
+				panic(err) // shutting down the server
+			}
+		}
+	}
 }
