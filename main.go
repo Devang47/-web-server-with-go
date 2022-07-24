@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	fmt.Print("\033[H\033[2J")
 	fmt.Println("Starting the server at 8080!")
 
 	r := chi.NewRouter()
