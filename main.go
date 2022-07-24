@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-
 	fmt.Println("Starting the server at 8080!")
 
 	r := chi.NewRouter()
@@ -23,19 +22,11 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(cors.Default().Handler)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello"))
-	})
-
-	r.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "static"))
-	FileServer(r, "/files", filesDir)
+	FileServer(r, "/", filesDir)
 
-	http.ListenAndServe(":8000", r)
+	http.ListenAndServe(":8080", r)
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {
@@ -44,7 +35,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 	}
 
 	if path != "/" && path[len(path)-1] != '/' {
-		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
 		path += "/"
 	}
 	path += "*"
